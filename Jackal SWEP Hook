@@ -1,0 +1,65 @@
+-- **Area outside of lines is modified code from NextKuromeThe76Soldier's Ballistic Shield SWEP to work for this application.
+-- I've added comments to explain what it does to the best of my ability
+
+
+local ShieldBreakSound         = Sound("weapons/plasmapistol2/optre_fire_overcharge.wav")
+
+hook.Add( "EntityTakeDamage", "Ballistic_ShieldDMGNullifier", function( target, dmginfo )
+	if (target:IsPlayer() && target:GetNWBool("HasBallistic_Shield", false) == true && IsValid(target:GetNWEntity("Ballistic_ShieldSwepEnt",NULL))) then
+		-- this line serves to disable protection if the shield is not equipped but has been commentted out to allow the shield to be used with other weapons
+         if (!target:GetActiveWeapon():GetClass():find("kigyarshield")) then /*target:SetNWBool("HasBallistic_Shield",false) target:SetNWEntity("Ballistic_ShieldSwepEnt",NULL) return false */end
+        -- checks to see if the player is crouching as in the thirdperson view with most weapons the shield on the model is in front
+        -- I'd like to adjust this to allow for it to work stnading with weapons that keep the arm up but this works well for now
+        if (target:GetActiveWeapon():GetHoldType() != "smg")then
+            if (target:Crouching() == false) then return end
+        end
+		if IsValid(dmginfo:GetAttacker()) and dmginfo:GetAttacker() ~= target then
+			if target:GetNWBool("DoesBallistic_ShieldDMG") == false then
+                -- Does some math to figure out the angle of attack
+				local TrueVec=(target:GetPos()-dmginfo:GetAttacker():GetPos()):GetNormalized()
+				local LookVec=target:GetAimVector()
+				local DotProduct=LookVec:DotProduct(TrueVec)
+				local ApproachAngle=(-math.deg(math.asin(DotProduct))+10)
+				local type = target:GetActiveWeapon().Type
+--------------------------------------------------------------------------------------------------
+				 print(dmginfo:GetDamage())
+                -- Lowers the shields health in accordance with the ammount of damage taken
+                target:SetNWInt("Shield_Health", target:GetNWInt("Shield_Health") - dmginfo:GetDamage())
+                 print(target:GetNWInt("Shield_Health"))
+                 print(target:GetNWBool("HasBallistic_Shield"))
+
+                local SHealth = target:GetNWInt("Shield_Health")
+                -- If the shield health drops below Zero it breaks needing to be reactivated manually.
+                if (SHealth <= 0) then
+                    target:SetNWBool("HasBallistic_Shield",false)
+                    target:SetBodygroup(3, 1)
+                    target:EmitSound(ShieldBreakSound)
+                    target:SetNWInt("Shield_Timer", 45)
+                    return false
+                end
+
+---------------------------------------------------------------------------------------------------
+                -- Creates an about 90 degree cone in front of the player that the shield will block damage from
+				if ApproachAngle > 45 then
+                    -- Damage types that the shield blocks can be removed to block all damage but this list works well
+					if dmginfo:GetDamageType() == DMG_BULLET or
+					dmginfo:GetDamageType() == DMG_AIRBOAT or
+					dmginfo:GetDamageType() == DMG_SNIPER or
+					dmginfo:GetDamageType() == DMG_DISSOLVE or -- every energy weapon NextKuromeThe76Soldier has made
+					dmginfo:GetDamageType() == 1073750018 or -- HL resurgence combine sniper thingy
+					dmginfo:GetDamageType() == 4098 or -- HL resurgence HECU bullets
+					dmginfo:GetDamageType() == DMG_CLUB or -- crowbar
+					dmginfo:GetDamageType() == DMG_SLASH or -- zambie
+					dmginfo:GetDamageType() == DMG_DIRECT then -- some weapons don't have an damage type for thier bullets...
+						target:SetNWBool("DoesBallistic_ShieldDMG",false )
+                        dmginfo:SetDamage(0)
+					else
+                        -- The print sends the damage type to console in case you want to add it to the list but the scale reduces damage taken from nonbullet sources
+						--print(dmginfo:GetDamageType())
+						dmginfo:ScaleDamage(0.40)
+					end
+				end
+			end
+		end
+	end
+end )
