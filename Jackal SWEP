@@ -1,0 +1,109 @@
+AddCSLuaFile()
+-- Basic SWEP data
+SWEP.Author         = "Greevar"
+SWEP.Base           = "weapon_base"
+SWEP.PrintName      = "Kig Yar Shield"
+SWEP.Instructions   = [[Left-Click: Does this.
+Right-Click: Does That.]]
+
+SWEP.ViewModel      = "models/weapons/c_357.mdl"
+SWEP.ViewModelFlip  = false 
+SWEP.UseHands       = true 
+SWEP.WorldModel     = ""
+SWEP.SetHoldType    = "smg"
+
+SWEP.Weight         = 5
+SWEP.AutoSwitchTo   = true 
+SWEP.AutoSwitchFrom = false 
+
+SWEP.Slot           = 1
+SWEP.SlotPos        = 0
+SWEP.DrawAmmo       = false 
+SWEP.DrawCrosshair  = true
+
+SWEP.Spawnable      = true 
+SWEP.AdminSpawnable = true 
+-- format for non-firing primary
+SWEP.Primary.ClipSize     = -1
+SWEP.Primary.DefaultClip  = -1
+SWEP.Primary.Ammo         = "none"
+SWEP.Primary.Automatic    = false
+SWEP.Primary.Delay        = 5
+
+SWEP.Secondary.ClipSize     = -1
+SWEP.Secondary.DefaultClip  = -1
+SWEP.Secondary.Ammo         = "none"
+SWEP.Secondary.Automatic    = false
+
+SWEP.ShouldDropOnDie        = false
+
+local ShieldOnSound            = Sound("covenantshieldsounds/shielddeactivate2.wav")
+local ShieldOffSound           = Sound("weapons/plasmarepeater2/optre_reload1.wav")
+local ShieldBreakSound         = Sound("weapons/plasmapistol2/optre_fire_overcharge.wav")
+
+function SWEP:Initialize()
+    self:SetHoldType("smg")
+    self.Owner:SetNWEntity("Ballistic_ShieldSwepEnt", self)
+end
+
+function SWEP:Deploy()
+    -- Sets the shield to disappear when you pull out the swep if your shield is in active
+    -- Mostly for if you die with the shield active to reset it
+    if (self.Owner:GetNWEntity("HasBallistic_Shield", false) == true) then
+        self.Owner:SetBodygroup(3,0)
+    elseif(self.Owner:GetNWEntity("HasBallistic_Shield", false) == false) then
+        self.Owner:SetBodygroup(3,1)
+    end
+end
+
+function SWEP:Think()
+
+    self.Owner:SetNWEntity("Ballistic_ShieldSwepEnt", self)
+
+end
+
+function SWEP:PrimaryAttack()
+    local ply = self:GetOwner()
+    -- Toggles the shield on and off
+    if (self.Owner:GetNWBool("HasBallistic_Shield", false) == false || self.Owner:GetNWBool("HasBallistic_Shield", false) == nil) then
+        ply:SetBodygroup( 3, 0)
+        ply:EmitSound(ShieldOnSound)
+        self.Owner:SetNWBool("HasBallistic_Shield", true )
+        -- Sets the shield health and cooldown till next toggle, I have this as a variable as I'm trying to have an increased cooldown when the shield breaks but it has been fine without it.
+        self.Owner:SetNWInt("Shield_Health", 250)
+        self.Owner:SetNWInt("Shield_Timer", 5)
+    elseif (self.Owner:GetNWBool("HasBallistic_Shield", false) == true ) then
+        ply:SetBodygroup(3, 1)
+        ply:EmitSound(ShieldOffSound)
+        self.Owner:SetNWBool("HasBallistic_Shield", false )
+    end
+
+    self:SetNextPrimaryFire( CurTime() + self.Primary.Delay)
+
+end
+
+function SWEP:SecondaryAttack()
+    local test = self.Owner:GetNWBool("HasBallistic_Shield")
+    print(test)
+end
+
+function SWEP:ShouldDropOnDie()
+    return true
+end
+
+function SWEP:OnRemove()
+    -- Sets the Shield to be removed the next time the SWEP is taken out.
+    local ply = self:GetOwner()
+    self.Owner:SetNWBool("HasBallistic_Shield", false )
+    ply:EmitSound(ShieldOffSound)
+    return
+end
+
+
+function SWEP:OnDrop()
+    -- Sets the Shield to be removed the next time the SWEP is taken out.
+    local ply = self:GetOwner()
+    self.Owner:SetNWBool("HasBallistic_Shield", false )
+    ply:EmitSound(ShieldOffSound)
+    return 
+end
