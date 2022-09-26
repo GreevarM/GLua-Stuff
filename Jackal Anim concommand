@@ -1,0 +1,12 @@
+ply = LocalPlayer()
+
+concommand.Add("sshieldup", function()
+if(ply:GetNWBool("HasKigYar_Shield", false) == nil) then
+    return
+elseif (ply:GetNWBool("HasKigYar_Shield", false) == false || ply:GetNWBool("HasKigYar_Shield", false) == nil) then
+    VManip:PlayAnim("shieldup")
+elseif (ply:GetNWBool("HasKigYar_Shield", false) == true ) then
+    VManip:QuitHolding("shieldup")
+end
+
+end )
