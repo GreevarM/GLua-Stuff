@@ -4,17 +4,17 @@
 
 local ShieldBreakSound         = Sound("weapons/plasmapistol2/optre_fire_overcharge.wav")
 
-hook.Add( "EntityTakeDamage", "Ballistic_ShieldDMGNullifier", function( target, dmginfo )
-	if (target:IsPlayer() && target:GetNWBool("HasBallistic_Shield", false) == true && IsValid(target:GetNWEntity("Ballistic_ShieldSwepEnt",NULL))) then
+hook.Add( "EntityTakeDamage", "KigYar_ShieldDMGNullifier", function( target, dmginfo )
+	if (target:IsPlayer() && target:GetNWBool("HasKigYar_Shield", false) == true ) then
 		-- this line serves to disable protection if the shield is not equipped but has been commentted out to allow the shield to be used with other weapons
-         if (!target:GetActiveWeapon():GetClass():find("kigyarshield")) then /*target:SetNWBool("HasBallistic_Shield",false) target:SetNWEntity("Ballistic_ShieldSwepEnt",NULL) return false */end
+        -- if (!target:GetActiveWeapon():GetClass():find("kigyarshield")) then /*target:SetNWBool("HasBallistic_Shield",false) target:SetNWEntity("Ballistic_ShieldSwepEnt",NULL) return false */end
         -- checks to see if the player is crouching as in the thirdperson view with most weapons the shield on the model is in front
         -- I'd like to adjust this to allow for it to work stnading with weapons that keep the arm up but this works well for now
         if (target:GetActiveWeapon():GetHoldType() != "smg")then
             if (target:Crouching() == false) then return end
         end
 		if IsValid(dmginfo:GetAttacker()) and dmginfo:GetAttacker() ~= target then
-			if target:GetNWBool("DoesBallistic_ShieldDMG") == false then
+			if target:GetNWBool("DoesKigYar_ShieldDMG") == false then
                 -- Does some math to figure out the angle of attack
 				local TrueVec=(target:GetPos()-dmginfo:GetAttacker():GetPos()):GetNormalized()
 				local LookVec=target:GetAimVector()
@@ -22,19 +22,20 @@ hook.Add( "EntityTakeDamage", "Ballistic_ShieldDMGNullifier", function( target, 
 				local ApproachAngle=(-math.deg(math.asin(DotProduct))+10)
 				local type = target:GetActiveWeapon().Type
 --------------------------------------------------------------------------------------------------
-				 print(dmginfo:GetDamage())
+				-- print(dmginfo:GetDamage())
                 -- Lowers the shields health in accordance with the ammount of damage taken
                 target:SetNWInt("Shield_Health", target:GetNWInt("Shield_Health") - dmginfo:GetDamage())
-                 print(target:GetNWInt("Shield_Health"))
-                 print(target:GetNWBool("HasBallistic_Shield"))
+                -- print(target:GetNWInt("Shield_Health"))
+                -- print(target:GetNWBool("HasKigYar_Shield"))
 
                 local SHealth = target:GetNWInt("Shield_Health")
                 -- If the shield health drops below Zero it breaks needing to be reactivated manually.
                 if (SHealth <= 0) then
-                    target:SetNWBool("HasBallistic_Shield",false)
+                    target:SetNWBool("HasKigYar_Shield",false)
                     target:SetBodygroup(3, 1)
                     target:EmitSound(ShieldBreakSound)
                     target:SetNWInt("Shield_Timer", 45)
+					target:ConCommand("sshield")
                     return false
                 end
 
@@ -51,7 +52,7 @@ hook.Add( "EntityTakeDamage", "Ballistic_ShieldDMGNullifier", function( target, 
 					dmginfo:GetDamageType() == DMG_CLUB or -- crowbar
 					dmginfo:GetDamageType() == DMG_SLASH or -- zambie
 					dmginfo:GetDamageType() == DMG_DIRECT then -- some weapons don't have an damage type for thier bullets...
-						target:SetNWBool("DoesBallistic_ShieldDMG",false )
+						target:SetNWBool("DoesKigYar_ShieldDMG",false )
                         dmginfo:SetDamage(0)
 					else
                         -- The print sends the damage type to console in case you want to add it to the list but the scale reduces damage taken from nonbullet sources
