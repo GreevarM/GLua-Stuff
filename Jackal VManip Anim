@@ -1,0 +1,15 @@
+AddCSLuaFile()
+
+
+VManip:RegisterAnim("shieldup",
+
+{
+["model"] = "c_vmanipinteract.mdl",
+["lerp_peak"]=0.2,
+["lerp_speed_in"]=1,
+["lerp_speed_out"]=0.8,
+["lerp_curve"]=2,
+["speed"]=1.5,
+["holdtime"]=0.22
+}
+)
