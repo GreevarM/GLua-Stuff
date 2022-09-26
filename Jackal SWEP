@@ -43,39 +43,40 @@ local ShieldBreakSound         = Sound("weapons/plasmapistol2/optre_fire_overcha
 
 function SWEP:Initialize()
     self:SetHoldType("smg")
-    self.Owner:SetNWEntity("Ballistic_ShieldSwepEnt", self)
 end
 
 function SWEP:Deploy()
     -- Sets the shield to disappear when you pull out the swep if your shield is in active
     -- Mostly for if you die with the shield active to reset it
-    if (self.Owner:GetNWEntity("HasBallistic_Shield", false) == true) then
-        self.Owner:SetBodygroup(3,0)
-    elseif(self.Owner:GetNWEntity("HasBallistic_Shield", false) == false) then
-        self.Owner:SetBodygroup(3,1)
+    if (self:GetOwner():GetNWEntity("HasKigYar_Shield", false) == true) then
+        self:GetOwner():SetBodygroup(3,0)
+    elseif(self:GetOwner():GetNWEntity("HasKigYar_Shield", false) == false) then
+        self:GetOwner():SetBodygroup(3,1)
     end
 end
 
 function SWEP:Think()
 
-    self.Owner:SetNWEntity("Ballistic_ShieldSwepEnt", self)
 
 end
 
 function SWEP:PrimaryAttack()
     local ply = self:GetOwner()
     -- Toggles the shield on and off
-    if (self.Owner:GetNWBool("HasBallistic_Shield", false) == false || self.Owner:GetNWBool("HasBallistic_Shield", false) == nil) then
+    if (ply:GetNWBool("HasKigYar_Shield", false) == false || ply:GetNWBool("HasKigYar_Shield", false) == nil) then
         ply:SetBodygroup( 3, 0)
         ply:EmitSound(ShieldOnSound)
-        self.Owner:SetNWBool("HasBallistic_Shield", true )
+        ply:SetNWBool("HasKigYar_Shield", true )
         -- Sets the shield health and cooldown till next toggle, I have this as a variable as I'm trying to have an increased cooldown when the shield breaks but it has been fine without it.
-        self.Owner:SetNWInt("Shield_Health", 250)
-        self.Owner:SetNWInt("Shield_Timer", 5)
-    elseif (self.Owner:GetNWBool("HasBallistic_Shield", false) == true ) then
+        ply:SetNWInt("Shield_Health", 250)
+        ply:SetNWInt("Shield_Timer", 5)
+        ply:ConCommand("sshieldup")
+    elseif (ply:GetNWBool("HasKigYar_Shield", false) == true ) then
+       print("it worky")
         ply:SetBodygroup(3, 1)
         ply:EmitSound(ShieldOffSound)
-        self.Owner:SetNWBool("HasBallistic_Shield", false )
+        ply:SetNWBool("HasKigYar_Shield", false )
+        ply:ConCommand("sshieldup")
     end
 
     self:SetNextPrimaryFire( CurTime() + self.Primary.Delay)
@@ -83,7 +84,7 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
-    local test = self.Owner:GetNWBool("HasBallistic_Shield")
+    local test = self:GetOwner():GetNWBool("HasKigYar_Shield")
     print(test)
 end
 
@@ -94,7 +95,8 @@ end
 function SWEP:OnRemove()
     -- Sets the Shield to be removed the next time the SWEP is taken out.
     local ply = self:GetOwner()
-    self.Owner:SetNWBool("HasBallistic_Shield", false )
+
+    ply:SetNWBool("HasKigYar_Shield", false )
     ply:EmitSound(ShieldOffSound)
     return
 end
@@ -103,7 +105,7 @@ end
 function SWEP:OnDrop()
     -- Sets the Shield to be removed the next time the SWEP is taken out.
     local ply = self:GetOwner()
-    self.Owner:SetNWBool("HasBallistic_Shield", false )
+    ply:SetNWBool("HasKigYar_Shield", false )
     ply:EmitSound(ShieldOffSound)
     return 
 end
